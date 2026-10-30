@@ -26,22 +26,26 @@ final class DreamWorldCommand {
 
     @CommandHandler(value = "region", usage = ROOT + " region help", permission = "dreamworld.region.admin")
     void region(CommandContext context) {
-        plugin.getCommand("dreamworldregion").execute(context.sender(), "dreamworld region", context.arguments().toArray(String[]::new));
+        plugin.getCommand("dreamworldregion")
+                .execute(context.sender(), "dreamworld region", context.arguments().toArray(String[]::new));
     }
 
     @CommandCompleter("region")
     List<String> completeRegion(CommandContext context) {
-        return plugin.getCommand("dreamworldregion").tabComplete(context.sender(), "dreamworld region", context.arguments().toArray(String[]::new));
+        return plugin.getCommand("dreamworldregion")
+                .tabComplete(context.sender(), "dreamworld region", context.arguments().toArray(String[]::new));
     }
 
     @CommandHandler(value = "protect", usage = ROOT + " protect help", permission = "dreamworld.protect.admin")
     void protection(CommandContext context) {
-        plugin.getCommand("dreamworldprotect").execute(context.sender(), "dreamworld protect", context.arguments().toArray(String[]::new));
+        plugin.getCommand("dreamworldprotect")
+                .execute(context.sender(), "dreamworld protect", context.arguments().toArray(String[]::new));
     }
 
     @CommandCompleter("protect")
     List<String> completeProtection(CommandContext context) {
-        return plugin.getCommand("dreamworldprotect").tabComplete(context.sender(), "dreamworld protect", context.arguments().toArray(String[]::new));
+        return plugin.getCommand("dreamworldprotect")
+                .tabComplete(context.sender(), "dreamworld protect", context.arguments().toArray(String[]::new));
     }
 
     private final DreamWorldPlugin plugin;

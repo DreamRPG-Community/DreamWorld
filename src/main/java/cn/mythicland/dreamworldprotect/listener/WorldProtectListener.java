@@ -101,7 +101,8 @@ public final class WorldProtectListener implements Listener {
         Player actor = null;
         if (event instanceof EntityDamageByEntityEvent damage) {
             if (damage.getDamager() instanceof Player player) actor = player;
-            else if (damage.getDamager() instanceof Projectile projectile && projectile.getShooter() instanceof Player player)
+            else if (damage.getDamager() instanceof Projectile projectile &&
+                    projectile.getShooter() instanceof Player player)
                 actor = player;
         }
         if (actor != null && editModes.isEnabled(actor.getUniqueId())) return;
@@ -119,14 +120,16 @@ public final class WorldProtectListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onDecorationInteract(PlayerInteractEntityEvent event) {
         if (!(event.getRightClicked() instanceof Hanging) && !(event.getRightClicked() instanceof ArmorStand)) return;
-        if (!worldConfigs.get(event.getRightClicked().getWorld()).blockBreak() || editModes.isEnabled(event.getPlayer().getUniqueId()))
+        if (!worldConfigs.get(event.getRightClicked().getWorld()).blockBreak() ||
+                editModes.isEnabled(event.getPlayer().getUniqueId()))
             return;
         event.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onArmorStandManipulate(PlayerArmorStandManipulateEvent event) {
-        if (!worldConfigs.get(event.getRightClicked().getWorld()).blockBreak() || editModes.isEnabled(event.getPlayer().getUniqueId()))
+        if (!worldConfigs.get(event.getRightClicked().getWorld()).blockBreak() ||
+                editModes.isEnabled(event.getPlayer().getUniqueId()))
             return;
         event.setCancelled(true);
     }
