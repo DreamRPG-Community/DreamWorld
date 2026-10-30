@@ -1,17 +1,32 @@
-name: WorldManager
+name: DreamWorld
 version: ${version}
-main: cn.mythicland.worldmanager.WorldManagerPlugin
+main: cn.mythicland.dreamworld.DreamWorldPlugin
 author: ShanguanLinG
 load: STARTUP
-depend: [ Lib ]
+depend:
+- DreamLib
 description: Manage worlds stored below the plugin data directory.
-
 commands:
-  worldmanager:
+  dreamworld:
     description: Manage world snapshots, runtime copies, and cross-world spawn teleports.
-    aliases: [ wm ]
-
+    aliases:
+    - dw
+  dreamworldprotect:
+    description: Reload DreamWorld protection configuration.
+  edit:
+    description: Toggle temporary building mode.
+  dreamworldregion:
+    description: Manage world regions and landmarks.
 permissions:
-  worldmanager.admin:
+  dreamworld.admin:
     description: Allows administration of managed worlds.
+    default: op
+  dreamworld.protect.admin:
+    description: Allows reloading DreamWorld protection configuration.
+    default: op
+  dreamworld.protect.edit:
+    description: Allows toggling temporary building mode.
+    default: op
+  dreamworld.region.admin:
+    description: Allows DreamWorld region administration.
     default: op

@@ -1,15 +1,64 @@
-# Persistent world snapshot directory relative to the WorldManager data directory.
-# This is the only directory users should use for map files.
 world-directory: worlds
-
-# Initial root world name. It must match server.properties level-name exactly.
 initial-world-name: world
-
-# Whether to remove non-terrain resources from the persistent snapshot after saving.
 clean-world-resources: false
-
-# Whether to rebuild a world from its persistent snapshot before every load.
 auto-reset-worlds: false
-
-# Fallback world for players moved during a forced unload.
 fallback-world: world
+world-config-directory: protection
+edit-mode:
+  permission: dreamworld.protect.edit
+world-defaults:
+  rules:
+    block-placement: true
+    block-breaking: true
+    bucket-actions: true
+    leaf-decay: true
+    block-fade: true
+    block-ignition: true
+    fire-spread: true
+    explosion-block-damage: true
+    player-fall-damage: true
+    ender-pearl-launch: false
+    natural-mob-spawning: false
+  interact:
+    mode: disabled
+    block-ids:
+    - 0
+    - 54
+    - 58
+    - 61
+    - 62
+    - 63
+    - 68
+    - 116
+    - 117
+    - 118
+    - 130
+    - 146
+    - 323
+    - 397
+    - 330
+    - 70
+    - 148
+    - 72
+    - 147
+    - 33
+    - 23
+    - 77
+  commands:
+    mode: blacklist
+    names:
+    - '?'
+    - bukkit:?
+    - help
+    - bukkit:help
+    - pl
+    - plugins
+    - bukkit:pl
+    - bukkit:plugins
+selection:
+  wand: WOOD_SPADE
+particle:
+  enabled: true
+  interval-ticks: 10
+  render-distance: 64
+  max-regions-per-player: 32
