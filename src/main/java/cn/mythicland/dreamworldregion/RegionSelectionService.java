@@ -1,6 +1,6 @@
 package cn.mythicland.dreamworldregion;
 
-import cn.mythicland.dreamlib.bootstrap.annotation.InjectComponent;
+import cn.mythicland.framework.component.InjectComponent;
 import org.bukkit.Location;
 
 import java.util.Map;

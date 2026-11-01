@@ -1,18 +1,19 @@
 package cn.mythicland.dreamworldprotect.command;
 
-import cn.mythicland.dreamlib.bootstrap.annotation.CommandComponent;
-import cn.mythicland.dreamlib.bootstrap.annotation.CommandHandler;
-import cn.mythicland.dreamlib.command.CommandContext;
-import cn.mythicland.dreamlib.command.VanillaCommandMessages;
 import cn.mythicland.dreamworldprotect.bootstrap.WorldProtectLifecycle;
-import org.bukkit.entity.Player;
+import cn.mythicland.framework.bukkit.command.CommandBinding;
+import cn.mythicland.framework.bukkit.command.CommandContext;
+import cn.mythicland.framework.bukkit.command.CommandRoute;
+import cn.mythicland.framework.bukkit.command.VanillaCommandMessages;
 
 import java.util.Objects;
+
+import org.bukkit.entity.Player;
 
 /**
  * Toggles temporary building mode for a player.
  */
-@CommandComponent("edit")
+@CommandBinding("edit")
 public final class EditCommand {
 
     private static final String ONLY_PLAYER_MESSAGE = VanillaCommandMessages.red("该命令只能由玩家执行。");
@@ -39,7 +40,7 @@ public final class EditCommand {
         return lifecycle.settings().editPermission();
     }
 
-    @CommandHandler(permissionMethod = "editPermission")
+    @CommandRoute(path = {"edit"}, maxArguments = Integer.MAX_VALUE, permissionMethod = "editPermission")
     void edit(CommandContext context) {
         context.requireArguments(0);
         if (!(context.sender() instanceof Player player)) {

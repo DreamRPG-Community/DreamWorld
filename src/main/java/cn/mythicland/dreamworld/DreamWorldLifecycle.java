@@ -1,21 +1,22 @@
 package cn.mythicland.dreamworld;
 
 import cn.mythicland.dreamlib.api.DreamLibApi;
-import cn.mythicland.dreamlib.bootstrap.DreamLibPluginLifecycle;
-import cn.mythicland.dreamlib.bootstrap.PluginTaskScope;
-import cn.mythicland.dreamlib.bootstrap.annotation.LifecycleComponent;
 import cn.mythicland.dreamworld.api.DreamWorldApi;
-import org.bukkit.scheduler.BukkitTask;
+import cn.mythicland.framework.bukkit.task.PluginTaskScope;
+import cn.mythicland.framework.component.LifecycleComponent;
+import cn.mythicland.framework.component.ManagedLifecycle;
 
 import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
+import org.bukkit.scheduler.BukkitTask;
+
 /**
  * Owns DreamWorld construction, service registration, command binding, and startup discovery.
  */
 @LifecycleComponent
-public final class DreamWorldLifecycle implements DreamLibPluginLifecycle {
+public final class DreamWorldLifecycle implements ManagedLifecycle {
 
     private final DreamWorldPlugin plugin;
     private final DreamLibApi lib;
@@ -53,7 +54,7 @@ public final class DreamWorldLifecycle implements DreamLibPluginLifecycle {
      * Restores the initial world, registers the API and command, and starts discovery.
      */
     @Override
-    public void enable() {
+    public void load() {
         DreamWorldSettings settings = configuration.snapshot();
         DreamWorldSettingsLoader.ensureDirectories(settings);
         spawnStore.load();
@@ -116,7 +117,7 @@ public final class DreamWorldLifecycle implements DreamLibPluginLifecycle {
      * Unregisters the API and closes managed world resources.
      */
     @Override
-    public void disable() {
+    public void unload() {
         tasks.cancel(startupTask);
         startupTask = null;
         if (service == null) return;

@@ -1,5 +1,7 @@
 package cn.mythicland.dreamworld;
 
+import cn.mythicland.framework.bukkit.content.ContentUpdate;
+import cn.mythicland.dreamworldregion.WorldRegionDataStore;
 import cn.mythicland.dreamlib.bootstrap.DreamLibManagedPlugin;
 
 import java.util.concurrent.CompletableFuture;
@@ -35,5 +37,18 @@ public final class DreamWorldPlugin extends DreamLibManagedPlugin {
 
     public void reloadWorldRegion() {
         bootstrap(REGION_PACKAGE).reload();
+    }
+
+    /** Reloads editable region, landmark and spawn definitions without reading system settings. */
+    public void reloadContent() {
+        bootstrap(REGION_PACKAGE).resolve(WorldRegionDataStore.class).reloadContent();
+        bootstrap(COMPONENT_PACKAGE).resolve(WorldSpawnStore.class).load();
+    }
+
+    /** @return validated editable world snapshots and their inverse updates */
+    public java.util.List<ContentUpdate> prepareContentReload() {
+        return java.util.List.of(
+                bootstrap(REGION_PACKAGE).resolve(WorldRegionDataStore.class).prepareContentReload(),
+                bootstrap(COMPONENT_PACKAGE).resolve(WorldSpawnStore.class).prepareContentReload());
     }
 }

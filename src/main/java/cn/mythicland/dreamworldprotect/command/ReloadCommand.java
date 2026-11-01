@@ -1,17 +1,17 @@
 package cn.mythicland.dreamworldprotect.command;
 
-import cn.mythicland.dreamlib.bootstrap.annotation.CommandComponent;
-import cn.mythicland.dreamlib.bootstrap.annotation.CommandHandler;
-import cn.mythicland.dreamlib.command.CommandContext;
-import cn.mythicland.dreamlib.command.VanillaCommandMessages;
 import cn.mythicland.dreamworld.DreamWorldPlugin;
+import cn.mythicland.framework.bukkit.command.CommandBinding;
+import cn.mythicland.framework.bukkit.command.CommandContext;
+import cn.mythicland.framework.bukkit.command.CommandRoute;
+import cn.mythicland.framework.bukkit.command.VanillaCommandMessages;
 
 import java.util.Objects;
 
 /**
  * Reloads the global and per-world WorldProtect configuration.
  */
-@CommandComponent("dreamworldprotect")
+@CommandBinding("dreamworldprotect")
 public final class ReloadCommand {
 
     private static final String ADMIN_PERMISSION = "dreamworld.protect.admin";
@@ -25,7 +25,7 @@ public final class ReloadCommand {
         this.plugin = Objects.requireNonNull(plugin, "plugin");
     }
 
-    @CommandHandler(value = "reload", permission = ADMIN_PERMISSION)
+    @CommandRoute(path = {"dreamworldprotect", "reload"}, maxArguments = Integer.MAX_VALUE, permission = ADMIN_PERMISSION)
     void reload(CommandContext context) {
         context.requireArguments(0);
         plugin.reloadWorldProtect();

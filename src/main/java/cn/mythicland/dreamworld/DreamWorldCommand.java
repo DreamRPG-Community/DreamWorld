@@ -1,30 +1,36 @@
 package cn.mythicland.dreamworld;
 
 import cn.mythicland.dreamlib.api.DreamLibApi;
-import cn.mythicland.dreamlib.bootstrap.annotation.CommandCompleter;
-import cn.mythicland.dreamlib.bootstrap.annotation.CommandComponent;
-import cn.mythicland.dreamlib.bootstrap.annotation.CommandHandler;
-import cn.mythicland.dreamlib.command.CommandContext;
-import cn.mythicland.dreamlib.command.VanillaCommandMessages;
-import cn.mythicland.dreamworld.api.WorldInfo;
 import cn.mythicland.dreamworld.api.DreamWorldApi;
-import org.bukkit.Bukkit;
-import org.bukkit.World;
-import org.bukkit.entity.Player;
+import cn.mythicland.dreamworld.api.WorldInfo;
+import cn.mythicland.framework.bukkit.command.CommandBinding;
+import cn.mythicland.framework.bukkit.command.CommandCompleter;
+import cn.mythicland.framework.bukkit.command.CommandContext;
+import cn.mythicland.framework.bukkit.command.CommandRoute;
+import cn.mythicland.framework.bukkit.command.VanillaCommandMessages;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
+import org.bukkit.Bukkit;
+import org.bukkit.World;
+import org.bukkit.entity.Player;
+
 /**
  * Handles DreamWorld commands.
  */
-@CommandComponent(value = "dreamworld", permission = "dreamworld.admin")
+@CommandBinding(value = "dreamworld", permission = "dreamworld.admin")
 final class DreamWorldCommand {
 
     private static final String ROOT = "/dreamworld";
 
-    @CommandHandler(value = "region", usage = ROOT + " region help", permission = "dreamworld.region.admin")
+    @CommandRoute(
+        path = {"dreamworld", "region"},
+        maxArguments = Integer.MAX_VALUE,
+        usages = ROOT + " region help",
+        permission = "dreamworld.region.admin"
+    )
     void region(CommandContext context) {
         plugin.getCommand("dreamworldregion")
                 .execute(context.sender(), "dreamworld region", context.arguments().toArray(String[]::new));
@@ -36,7 +42,12 @@ final class DreamWorldCommand {
                 .tabComplete(context.sender(), "dreamworld region", context.arguments().toArray(String[]::new));
     }
 
-    @CommandHandler(value = "protect", usage = ROOT + " protect help", permission = "dreamworld.protect.admin")
+    @CommandRoute(
+        path = {"dreamworld", "protect"},
+        maxArguments = Integer.MAX_VALUE,
+        usages = ROOT + " protect help",
+        permission = "dreamworld.protect.admin"
+    )
     void protection(CommandContext context) {
         plugin.getCommand("dreamworldprotect")
                 .execute(context.sender(), "dreamworld protect", context.arguments().toArray(String[]::new));
@@ -58,7 +69,11 @@ final class DreamWorldCommand {
         this.lib = Objects.requireNonNull(lib, "lib");
     }
 
-    @CommandHandler(value = "list", usage = ROOT + " list")
+    @CommandRoute(
+        path = {"dreamworld", "list"},
+        maxArguments = Integer.MAX_VALUE,
+        usages = ROOT + " list"
+    )
     void list(CommandContext context) {
         context.requireArguments(0);
         Collection<WorldInfo> worlds = service().list();
@@ -74,17 +89,22 @@ final class DreamWorldCommand {
         }
     }
 
-    @CommandHandler(value = "reload", usage = ROOT + " reload")
+    @CommandRoute(
+        path = {"dreamworld", "reload"},
+        maxArguments = Integer.MAX_VALUE,
+        usages = ROOT + " reload"
+    )
     void reload(CommandContext context) {
         context.requireArguments(0);
         context.sender().sendMessage(VanillaCommandMessages.red("正在重载配置并扫描世界快照。"));
         report(context, plugin.reloadDreamWorld(), ignored -> "配置和世界快照重新加载完成。");
     }
 
-    @CommandHandler(
-            value = "teleport",
+    @CommandRoute(
+            path = {"dreamworld", "teleport"},
+            maxArguments = Integer.MAX_VALUE,
             aliases = {"tp"},
-            usage = ROOT + " teleport <世界>"
+            usages = ROOT + " teleport <世界>"
     )
     void teleport(CommandContext context) {
         context.requireArguments(1);
@@ -104,7 +124,11 @@ final class DreamWorldCommand {
         );
     }
 
-    @CommandHandler(value = "setspawn", usage = ROOT + " setspawn <世界>")
+    @CommandRoute(
+        path = {"dreamworld", "setspawn"},
+        maxArguments = Integer.MAX_VALUE,
+        usages = ROOT + " setspawn <世界>"
+    )
     void setSpawn(CommandContext context) {
         context.requireArguments(1);
         if (!(context.sender() instanceof Player player)) {
@@ -131,7 +155,11 @@ final class DreamWorldCommand {
         return completeWorlds(context);
     }
 
-    @CommandHandler(value = "load", usage = ROOT + " load <世界>")
+    @CommandRoute(
+        path = {"dreamworld", "load"},
+        maxArguments = Integer.MAX_VALUE,
+        usages = ROOT + " load <世界>"
+    )
     void load(CommandContext context) {
         context.requireArguments(1);
         String worldName = context.argument(0);
@@ -144,7 +172,11 @@ final class DreamWorldCommand {
         return completeWorlds(context);
     }
 
-    @CommandHandler(value = "unload", usage = ROOT + " unload <世界> [force]")
+    @CommandRoute(
+        path = {"dreamworld", "unload"},
+        maxArguments = Integer.MAX_VALUE,
+        usages = ROOT + " unload <世界> [force]"
+    )
     void unload(CommandContext context) {
         if (context.arguments().isEmpty() || context.arguments().size() > 2) {
             throw context.invalidUsage();
@@ -166,7 +198,11 @@ final class DreamWorldCommand {
         return List.of();
     }
 
-    @CommandHandler(value = "clean", usage = ROOT + " clean <世界>")
+    @CommandRoute(
+        path = {"dreamworld", "clean"},
+        maxArguments = Integer.MAX_VALUE,
+        usages = ROOT + " clean <世界>"
+    )
     void clean(CommandContext context) {
         context.requireArguments(1);
         String worldName = context.argument(0);
@@ -182,7 +218,11 @@ final class DreamWorldCommand {
         return completeWorlds(context);
     }
 
-    @CommandHandler(value = "save", usage = ROOT + " save <世界>")
+    @CommandRoute(
+        path = {"dreamworld", "save"},
+        maxArguments = Integer.MAX_VALUE,
+        usages = ROOT + " save <世界>"
+    )
     void save(CommandContext context) {
         context.requireArguments(1);
         String worldName = context.argument(0);

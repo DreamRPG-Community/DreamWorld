@@ -1,10 +1,15 @@
 package cn.mythicland.dreamworldregion;
 
-import cn.mythicland.dreamlib.bootstrap.PluginTaskScope;
-import cn.mythicland.dreamlib.bootstrap.annotation.ListenerComponent;
-import cn.mythicland.dreamlib.text.LegacyActionBar;
-import cn.mythicland.dreamworldregion.api.RegionDefinition;
 import cn.mythicland.dreamworldregion.api.DreamWorldRegionApi;
+import cn.mythicland.dreamworldregion.api.RegionDefinition;
+import cn.mythicland.framework.bukkit.component.ListenerComponent;
+import cn.mythicland.framework.bukkit.task.PluginTaskScope;
+import cn.mythicland.framework.bukkit.text.v1_12_R1.LegacyActionBar;
+import cn.mythicland.framework.component.InjectComponent;
+
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -13,12 +18,10 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.util.*;
-import java.util.concurrent.TimeUnit;
-
 /**
  * Shows Actionbar feedback when a player crosses a resolved region boundary.
  */
+@InjectComponent
 @ListenerComponent
 final class RegionTransitionListener implements Listener {
 

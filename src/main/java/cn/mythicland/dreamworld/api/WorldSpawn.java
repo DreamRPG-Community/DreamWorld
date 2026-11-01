@@ -1,6 +1,6 @@
 package cn.mythicland.dreamworld.api;
 
-import cn.mythicland.dreamlib.location.LocationSnapper;
+import cn.mythicland.framework.bukkit.location.LocationSnapper;
 
 import org.bukkit.Location;
 import org.bukkit.World;

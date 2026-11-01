@@ -1,9 +1,9 @@
 package cn.mythicland.dreamworldregion;
 
-import cn.mythicland.dreamlib.bootstrap.annotation.ConfigComponent;
-import cn.mythicland.dreamlib.config.ConfigValue;
-import cn.mythicland.dreamlib.config.ConfigView;
-import cn.mythicland.dreamlib.config.ConfigurableComponent;
+import cn.mythicland.framework.bukkit.config.ConfigView;
+import cn.mythicland.framework.bukkit.config.ConfigurableComponent;
+import cn.mythicland.framework.bukkit.config.annotation.ConfigComponent;
+import cn.mythicland.framework.bukkit.config.annotation.ConfigProperty;
 
 import java.util.Locale;
 import java.util.Objects;
@@ -56,30 +56,30 @@ public final class WorldRegionSettings implements ConfigurableComponent {
     }
 
     private record RawSettings(
-            @ConfigValue(
+            @ConfigProperty(
                     path = "selection.wand",
                     defaultValue = "WOOD_SPADE",
                     nonBlank = true
             )
             String wand,
-            @ConfigValue(
+            @ConfigProperty(
                     path = "particle.enabled",
                     defaultValue = "true"
             )
             boolean particlesEnabled,
-            @ConfigValue(
+            @ConfigProperty(
                     path = "particle.interval-ticks",
                     defaultValue = "10",
                     positive = true
             )
             long intervalTicks,
-            @ConfigValue(
+            @ConfigProperty(
                     path = "particle.render-distance",
                     defaultValue = "64",
                     positive = true
             )
             int renderDistance,
-            @ConfigValue(
+            @ConfigProperty(
                     path = "particle.max-regions-per-player",
                     defaultValue = "32",
                     positive = true

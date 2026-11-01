@@ -1,6 +1,6 @@
 package cn.mythicland.dreamworld;
 
-import cn.mythicland.dreamlib.path.SafePathResolver;
+import cn.mythicland.framework.path.SafePathResolver;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;

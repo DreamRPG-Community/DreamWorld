@@ -1,35 +1,36 @@
 package cn.mythicland.dreamworldprotect.listener;
 
-import cn.mythicland.dreamlib.command.VanillaCommandMessages;
-import cn.mythicland.dreamworldprotect.integration.dreamworld.DreamWorldIntegration;
+import cn.mythicland.dreamworld.api.DreamWorldLookup;
 import cn.mythicland.dreamworldprotect.policy.WorldProtectionRules;
 import cn.mythicland.dreamworldprotect.service.EditModeTracker;
 import cn.mythicland.dreamworldprotect.storage.WorldConfigStore;
+import cn.mythicland.framework.bukkit.command.VanillaCommandMessages;
+
+import java.util.Locale;
+
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Hanging;
 import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Hanging;
+import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.hanging.HangingBreakEvent;
-import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
 import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
+import org.bukkit.event.hanging.HangingBreakByEntityEvent;
+import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.event.world.WorldUnloadEvent;
-
-import java.util.Locale;
 
 /**
  * Applies the cached policy for each world to Bukkit events.
@@ -44,12 +45,12 @@ public final class WorldProtectListener implements Listener {
 
     private final WorldConfigStore worldConfigs;
     private final EditModeTracker editModes;
-    private final DreamWorldIntegration worldManager;
+    private final DreamWorldLookup worldManager;
 
     public WorldProtectListener(
             WorldConfigStore worldConfigs,
             EditModeTracker editModes,
-            DreamWorldIntegration worldManager
+            DreamWorldLookup worldManager
     ) {
         this.worldConfigs = worldConfigs;
         this.editModes = editModes;
@@ -94,7 +95,10 @@ public final class WorldProtectListener implements Listener {
         event.setCancelled(true);
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    @EventHandler(
+        priority = EventPriority.HIGHEST,
+        ignoreCancelled = true
+    )
     public void onDecorationDamage(EntityDamageEvent event) {
         if (!(event.getEntity() instanceof Hanging) && !(event.getEntity() instanceof ArmorStand)) return;
         if (!worldConfigs.get(event.getEntity().getWorld()).blockBreak()) return;
@@ -109,7 +113,10 @@ public final class WorldProtectListener implements Listener {
         event.setCancelled(true);
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    @EventHandler(
+        priority = EventPriority.HIGHEST,
+        ignoreCancelled = true
+    )
     public void onHangingBreak(HangingBreakEvent event) {
         if (!worldConfigs.get(event.getEntity().getWorld()).blockBreak()) return;
         if (event instanceof HangingBreakByEntityEvent damage && damage.getRemover() instanceof Player player
@@ -117,7 +124,10 @@ public final class WorldProtectListener implements Listener {
         event.setCancelled(true);
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    @EventHandler(
+        priority = EventPriority.HIGHEST,
+        ignoreCancelled = true
+    )
     public void onDecorationInteract(PlayerInteractEntityEvent event) {
         if (!(event.getRightClicked() instanceof Hanging) && !(event.getRightClicked() instanceof ArmorStand)) return;
         if (!worldConfigs.get(event.getRightClicked().getWorld()).blockBreak() ||
@@ -126,7 +136,10 @@ public final class WorldProtectListener implements Listener {
         event.setCancelled(true);
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    @EventHandler(
+        priority = EventPriority.HIGHEST,
+        ignoreCancelled = true
+    )
     public void onArmorStandManipulate(PlayerArmorStandManipulateEvent event) {
         if (!worldConfigs.get(event.getRightClicked().getWorld()).blockBreak() ||
                 editModes.isEnabled(event.getPlayer().getUniqueId()))

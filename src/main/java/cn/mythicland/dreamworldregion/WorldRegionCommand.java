@@ -1,30 +1,30 @@
 package cn.mythicland.dreamworldregion;
 
-import cn.mythicland.dreamworld.DreamWorldPlugin;
-
 import cn.mythicland.dreamlib.api.DreamLibApi;
-import cn.mythicland.dreamlib.bootstrap.annotation.CommandCompleter;
-import cn.mythicland.dreamlib.bootstrap.annotation.CommandComponent;
-import cn.mythicland.dreamlib.bootstrap.annotation.CommandHandler;
-import cn.mythicland.dreamlib.command.CommandContext;
-import cn.mythicland.dreamlib.command.CommandUsageException;
-import cn.mythicland.dreamlib.location.LocationSnapper;
-import cn.mythicland.dreamlib.text.LegacyText;
+import cn.mythicland.dreamworld.DreamWorldPlugin;
+import cn.mythicland.dreamworldregion.api.DreamWorldRegionApi;
 import cn.mythicland.dreamworldregion.api.LandmarkDefinition;
 import cn.mythicland.dreamworldregion.api.RegionBounds;
 import cn.mythicland.dreamworldregion.api.RegionDefinition;
-import cn.mythicland.dreamworldregion.api.DreamWorldRegionApi;
-import org.bukkit.Location;
-import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
+import cn.mythicland.framework.bukkit.command.CommandBinding;
+import cn.mythicland.framework.bukkit.command.CommandCompleter;
+import cn.mythicland.framework.bukkit.command.CommandContext;
+import cn.mythicland.framework.bukkit.command.CommandRoute;
+import cn.mythicland.framework.bukkit.command.CommandUsageException;
+import cn.mythicland.framework.bukkit.location.LocationSnapper;
+import cn.mythicland.framework.bukkit.text.LegacyText;
 
 import java.util.*;
 import java.util.logging.Level;
 
+import org.bukkit.Location;
+import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
+
 /**
  * Handles WorldRegion's administrative command tree.
  */
-@CommandComponent(value = "dreamworldregion", permission = "dreamworld.region.admin")
+@CommandBinding(value = "dreamworldregion", permission = "dreamworld.region.admin")
 final class WorldRegionCommand {
 
     private static final String ROOT = "/dreamworld region";
@@ -93,24 +93,37 @@ final class WorldRegionCommand {
                 + ")";
     }
 
-    @CommandHandler("pos1")
+    @CommandRoute(
+        path = {"dreamworldregion", "pos1"},
+        maxArguments = Integer.MAX_VALUE
+    )
     void positionOne(CommandContext context) {
         setPosition(context, true);
     }
 
-    @CommandHandler("pos2")
+    @CommandRoute(
+        path = {"dreamworldregion", "pos2"},
+        maxArguments = Integer.MAX_VALUE
+    )
     void positionTwo(CommandContext context) {
         setPosition(context, false);
     }
 
-    @CommandHandler("clear")
+    @CommandRoute(
+        path = {"dreamworldregion", "clear"},
+        maxArguments = Integer.MAX_VALUE
+    )
     void clear(CommandContext context) {
         context.requireArguments(0);
         if (context.sender() instanceof Player player) selections.clear(player.getUniqueId());
         context.sender().sendMessage(LegacyText.colorize("&a已清除当前区域选区。"));
     }
 
-    @CommandHandler(value = "create", usage = ROOT + " create <id> <显示名> [priority]")
+    @CommandRoute(
+        path = {"dreamworldregion", "create"},
+        maxArguments = Integer.MAX_VALUE,
+        usages = ROOT + " create <id> <显示名> [priority]"
+    )
     void create(CommandContext context) {
         context.requireAtLeast(2);
         if (!(context.sender() instanceof Player player)) {
@@ -141,7 +154,11 @@ final class WorldRegionCommand {
         context.sender().sendMessage(LegacyText.colorize("&a区域已保存: " + definition.id()));
     }
 
-    @CommandHandler(value = "delete", usage = ROOT + " delete <id>")
+    @CommandRoute(
+        path = {"dreamworldregion", "delete"},
+        maxArguments = Integer.MAX_VALUE,
+        usages = ROOT + " delete <id>"
+    )
     void delete(CommandContext context) {
         context.requireArguments(1);
         String id = context.argument(0);
@@ -149,7 +166,10 @@ final class WorldRegionCommand {
         context.sender().sendMessage(LegacyText.colorize("&a区域已删除: " + id));
     }
 
-    @CommandHandler("list")
+    @CommandRoute(
+        path = {"dreamworldregion", "list"},
+        maxArguments = Integer.MAX_VALUE
+    )
     void list(CommandContext context) {
         context.requireArguments(0);
         Collection<RegionDefinition> regions = service.regions();
@@ -165,7 +185,11 @@ final class WorldRegionCommand {
         }
     }
 
-    @CommandHandler(value = "landmark", usage = LANDMARK_USAGE)
+    @CommandRoute(
+        path = {"dreamworldregion", "landmark"},
+        maxArguments = Integer.MAX_VALUE,
+        usages = LANDMARK_USAGE
+    )
     void landmark(CommandContext context) {
         context.requireAtLeast(1);
         switch (context.argument(0).toLowerCase(Locale.ROOT)) {
@@ -193,10 +217,11 @@ final class WorldRegionCommand {
         return List.of();
     }
 
-    @CommandHandler(
-            value = "teleport",
+    @CommandRoute(
+            path = {"dreamworldregion", "teleport"},
+            maxArguments = Integer.MAX_VALUE,
             aliases = {"tp"},
-            usage = ROOT + " teleport <地标id>",
+            usages = ROOT + " teleport <地标id>",
             permission = "",
             inheritPermission = false
     )
@@ -241,7 +266,10 @@ final class WorldRegionCommand {
                 .toList();
     }
 
-    @CommandHandler("reload")
+    @CommandRoute(
+        path = {"dreamworldregion", "reload"},
+        maxArguments = Integer.MAX_VALUE
+    )
     void reload(CommandContext context) {
         context.requireArguments(0);
         plugin.reloadWorldRegion();
@@ -271,7 +299,7 @@ final class WorldRegionCommand {
             throw new CommandUsageException(ROOT + " landmark set <id> <显示名>");
         }
         String displayName = String.join(" ", arguments.subList(1, arguments.size())).trim();
-        Location location = LocationSnapper.snapBlockAndView(player.getLocation());
+        Location location = LocationSnapper.snapBlockAndHorizontalView(player.getLocation());
         LandmarkDefinition definition = new LandmarkDefinition(
                 arguments.getFirst(),
                 displayName,

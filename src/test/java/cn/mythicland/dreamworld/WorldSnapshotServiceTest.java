@@ -6,6 +6,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -19,7 +20,7 @@ class WorldSnapshotServiceTest {
         Path sourceWorld = createWorld();
         Path snapshots = temporaryDirectory.resolve("worlds");
         Path runtimeRoot = temporaryDirectory.resolve(".runtime");
-        WorldSnapshotService service = new WorldSnapshotService(snapshots, runtimeRoot);
+        WorldSnapshotService service = new WorldSnapshotService(snapshots, runtimeRoot, this::copyRegion);
         service.ensureRootDirectory();
 
         WorldSnapshotService.SnapshotSaveResult saved = service.save("main", sourceWorld);
@@ -56,7 +57,8 @@ class WorldSnapshotServiceTest {
         Path runtimeRoot = temporaryDirectory.resolve(".runtime");
         WorldSnapshotService service = new WorldSnapshotService(
                 temporaryDirectory.resolve("worlds"),
-                runtimeRoot
+                runtimeRoot,
+                this::copyRegion
         );
         service.ensureRootDirectory();
         service.save("main", world);
@@ -81,7 +83,8 @@ class WorldSnapshotServiceTest {
 
         WorldSnapshotService service = new WorldSnapshotService(
                 temporaryDirectory.resolve("worlds"),
-                temporaryDirectory.resolve(".runtime")
+                temporaryDirectory.resolve(".runtime"),
+                this::copyRegion
         );
         service.ensureRootDirectory();
 
@@ -102,5 +105,9 @@ class WorldSnapshotServiceTest {
         Files.writeString(world.resolve("DIM-1").resolve("region").resolve("r.0.0.mca"), "nether");
         Files.writeString(world.resolve("DIM1").resolve("region").resolve("r.0.0.mca"), "end");
         return world;
+    }
+
+    private void copyRegion(Path source, Path target) throws IOException {
+        Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
     }
 }

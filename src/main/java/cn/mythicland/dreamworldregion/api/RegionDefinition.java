@@ -1,5 +1,7 @@
 package cn.mythicland.dreamworldregion.api;
 
+import cn.mythicland.framework.validation.TextValidation;
+
 import java.util.Objects;
 
 /**
@@ -24,22 +26,17 @@ public record RegionDefinition(
      */
     public RegionDefinition {
         id = requireIdentifier(id);
-        displayName = requireText(displayName, "displayName");
-        worldName = requireText(worldName, "worldName");
+        displayName = TextValidation.requireText(displayName, "displayName");
+        worldName = TextValidation.requireText(worldName, "worldName");
         Objects.requireNonNull(bounds, "bounds");
     }
 
     private static String requireIdentifier(String value) {
-        String identifier = requireText(value, "id");
+        String identifier = TextValidation.requireText(value, "id");
         if (!identifier.matches("[A-Za-z0-9_-]+")) {
             throw new IllegalArgumentException("id contains unsupported characters: " + identifier);
         }
         return identifier;
     }
 
-    private static String requireText(String value, String fieldName) {
-        String text = Objects.requireNonNull(value, fieldName).trim();
-        if (text.isBlank()) throw new IllegalArgumentException(fieldName + " cannot be blank");
-        return text;
-    }
 }

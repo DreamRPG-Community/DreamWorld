@@ -1,17 +1,18 @@
 package cn.mythicland.dreamworldprotect.config;
 
-import cn.mythicland.dreamlib.bootstrap.annotation.ConfigComponent;
-import cn.mythicland.dreamlib.config.ConfigValue;
-import cn.mythicland.dreamlib.config.ConfigView;
-import cn.mythicland.dreamlib.config.ConfigurableComponent;
-import cn.mythicland.dreamlib.policy.ListMode;
-import cn.mythicland.dreamlib.policy.ListPolicy;
 import cn.mythicland.dreamworldprotect.policy.WorldProtectionRules;
-import org.bukkit.configuration.file.FileConfiguration;
+import cn.mythicland.framework.bukkit.config.ConfigView;
+import cn.mythicland.framework.bukkit.config.ConfigurableComponent;
+import cn.mythicland.framework.bukkit.config.annotation.ConfigComponent;
+import cn.mythicland.framework.bukkit.config.annotation.ConfigProperty;
+import cn.mythicland.framework.policy.ListMode;
+import cn.mythicland.framework.policy.ListPolicy;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
+
+import org.bukkit.configuration.file.FileConfiguration;
 
 /**
  * Binds global WorldProtect settings while leaving per-world files to the domain store.
@@ -30,7 +31,7 @@ public final class WorldProtectConfiguration implements ConfigurableComponent {
             FileConfiguration configuration,
             Consumer<String> warningConsumer
     ) {
-        return build(cn.mythicland.dreamlib.config.ConfigSupport.bind(
+        return build(cn.mythicland.framework.bukkit.config.ConfigSupport.bind(
                 configuration,
                 RawSettings.class,
                 warningConsumer
@@ -83,90 +84,90 @@ public final class WorldProtectConfiguration implements ConfigurableComponent {
     }
 
     record RawSettings(
-            @ConfigValue(
+            @ConfigProperty(
                     path = "world-config-directory",
                     defaultValue = "worlds",
                     nonBlank = true
             )
             String worldConfigDirectory,
-            @ConfigValue(
+            @ConfigProperty(
                     path = "edit-mode.permission",
                     defaultValue = "dreamworld.protect.edit",
                     nonBlank = true
             )
             String editPermission,
-            @ConfigValue(
+            @ConfigProperty(
                     path = "world-defaults.rules.block-placement",
                     defaultValue = "true"
             )
             boolean blockPlace,
-            @ConfigValue(
+            @ConfigProperty(
                     path = "world-defaults.rules.block-breaking",
                     defaultValue = "true"
             )
             boolean blockBreak,
-            @ConfigValue(
+            @ConfigProperty(
                     path = "world-defaults.interact.mode",
                     defaultValue = "DISABLED"
             )
             ListMode interactionMode,
-            @ConfigValue(
+            @ConfigProperty(
                     path = "world-defaults.interact.block-ids",
                     defaultValue = "0,54,58,61,62,63,68,116,117,118,130,146,323,397,330,70,148,72,147,33,23,77",
                     nonNegative = true
             )
             List<Integer> interactionBlockIds,
-            @ConfigValue(
+            @ConfigProperty(
                     path = "world-defaults.rules.bucket-actions",
                     defaultValue = "true"
             )
             boolean bucket,
-            @ConfigValue(
+            @ConfigProperty(
                     path = "world-defaults.rules.leaf-decay",
                     defaultValue = "true"
             )
             boolean leafDecay,
-            @ConfigValue(
+            @ConfigProperty(
                     path = "world-defaults.rules.block-fade",
                     defaultValue = "true"
             )
             boolean blockFade,
-            @ConfigValue(
+            @ConfigProperty(
                     path = "world-defaults.rules.block-ignition",
                     defaultValue = "true"
             )
             boolean blockIgnite,
-            @ConfigValue(
+            @ConfigProperty(
                     path = "world-defaults.rules.fire-spread",
                     defaultValue = "true"
             )
             boolean fireSpread,
-            @ConfigValue(
+            @ConfigProperty(
                     path = "world-defaults.rules.explosion-block-damage",
                     defaultValue = "true"
             )
             boolean explosions,
-            @ConfigValue(
+            @ConfigProperty(
                     path = "world-defaults.rules.player-fall-damage",
                     defaultValue = "true"
             )
             boolean fallDamage,
-            @ConfigValue(
+            @ConfigProperty(
                     path = "world-defaults.rules.ender-pearl-launch",
                     defaultValue = "false"
             )
             boolean enderPearl,
-            @ConfigValue(
+            @ConfigProperty(
                     path = "world-defaults.rules.natural-mob-spawning",
                     defaultValue = "false"
             )
             boolean naturalMobSpawning,
-            @ConfigValue(
+            @ConfigProperty(
                     path = "world-defaults.commands.mode",
                     defaultValue = "BLACKLIST"
             )
             ListMode commandMode,
-            @ConfigValue(
+            @ConfigProperty(
                     path = "world-defaults.commands.names",
                     defaultValue = "?,bukkit:?,help,bukkit:help,pl,plugins,bukkit:pl,bukkit:plugins",
                     nonBlank = true

@@ -1,7 +1,7 @@
 package cn.mythicland.dreamworldprotect.storage;
 
-import cn.mythicland.dreamlib.policy.ListMode;
-import cn.mythicland.dreamlib.policy.ListPolicy;
+import cn.mythicland.framework.policy.ListMode;
+import cn.mythicland.framework.policy.ListPolicy;
 import cn.mythicland.dreamworldprotect.api.DreamWorldProtectionApi;
 import cn.mythicland.dreamworldprotect.api.WorldProtectionPolicy;
 import cn.mythicland.dreamworldprotect.policy.WorldProtectionRules;

@@ -105,7 +105,9 @@ public interface DreamWorldApi {
      * asynchronously. Automatic saving is paused only for the duration of the copy and restored
      * afterward. The snapshot contains {@code level.dat}, an existing {@code uid.dat}, and region
      * files from the overworld, Nether, and End dimensions. Future ordinary loads copy those map
-     * files into an internal runtime directory; the configured initial world is restored into its
+     * files into an internal runtime directory. Living creatures are excluded during both save
+     * and restore; terrain, block entities and nonliving map decorations are preserved.
+     * The configured initial world is restored into its
      * server-root directory. Player data and runtime files are not persisted.</p>
      *
      * @param logicalName the single-segment logical world name

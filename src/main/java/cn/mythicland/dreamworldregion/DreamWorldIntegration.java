@@ -1,126 +1,28 @@
 package cn.mythicland.dreamworldregion;
 
-import cn.mythicland.dreamlib.bootstrap.annotation.InjectComponent;
-import org.bukkit.Bukkit;
+import cn.mythicland.framework.component.InjectComponent;
+import cn.mythicland.dreamworld.api.DreamWorldLookup;
 import org.bukkit.World;
-import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.logging.Level;
 
 /**
- * Class-loader-safe optional adapter for DreamWorld's public service.
+ * Injects DreamWorld's world lookup into the region component graph.
  */
 @InjectComponent
 final class DreamWorldIntegration {
-
-    private static final String PLUGIN_NAME = "DreamWorld";
-    private static final String API_CLASS_NAME = "cn.mythicland.dreamworld.api.DreamWorldApi";
-
-    private final JavaPlugin plugin;
-    private Object provider;
-    private Method findLogicalName;
-    private Method findWorld;
-    private Method loadWorld;
-    private boolean lookupFailed;
-    private boolean failureLogged;
+    private final DreamWorldLookup lookup;
 
     DreamWorldIntegration(JavaPlugin plugin) {
-        this.plugin = plugin;
+        lookup = new DreamWorldLookup(plugin);
     }
 
     String logicalNameOrBukkitName(World world) {
-        return logicalName(world).orElse(world.getName());
+        return lookup.logicalNameOrBukkitName(world);
     }
 
     CompletableFuture<World> resolveWorld(String logicalName) {
-        World loaded = Bukkit.getWorld(logicalName);
-        if (loaded != null) return CompletableFuture.completedFuture(loaded);
-        if (providerUnavailable()) {
-            return CompletableFuture.failedFuture(
-                    new IllegalStateException("World is not loaded and DreamWorld is unavailable: " + logicalName)
-            );
-        }
-        try {
-            Object result = findWorld.invoke(provider, logicalName);
-            if (result instanceof Optional<?> optional && optional.isPresent()) {
-                Object world = optional.orElseThrow();
-                if (world instanceof World resolved) return CompletableFuture.completedFuture(resolved);
-            }
-            Object future = loadWorld.invoke(provider, logicalName);
-            if (!(future instanceof CompletableFuture<?> loading)) {
-                throw new IllegalStateException("DreamWorld load did not return CompletableFuture");
-            }
-            return loading.thenApply(value -> {
-                if (!(value instanceof World world)) {
-                    throw new IllegalStateException("DreamWorld loaded an invalid world value");
-                }
-                return world;
-            });
-        } catch (IllegalAccessException | InvocationTargetException | RuntimeException exception) {
-            return CompletableFuture.failedFuture(
-                    new IllegalStateException("DreamWorld could not resolve world: " + logicalName, exception)
-            );
-        }
-    }
-
-    private Optional<String> logicalName(World world) {
-        if (world == null || providerUnavailable()) return Optional.empty();
-        try {
-            Object result = findLogicalName.invoke(provider, world);
-            if (!(result instanceof Optional<?> optional)) return Optional.empty();
-            return optional.filter(String.class::isInstance).map(String.class::cast);
-        } catch (IllegalAccessException | InvocationTargetException | RuntimeException exception) {
-            logLookupFailure(exception);
-            return Optional.empty();
-        }
-    }
-
-    private boolean providerUnavailable() {
-        if (provider != null && findLogicalName != null && findWorld != null && loadWorld != null) return false;
-        if (lookupFailed) return true;
-
-        Plugin worldManager = plugin.getServer().getPluginManager().getPlugin(PLUGIN_NAME);
-        if (worldManager == null || !worldManager.isEnabled()) return true;
-
-        try {
-            Class<?> apiClass = Class.forName(
-                    API_CLASS_NAME,
-                    true,
-                    worldManager.getClass().getClassLoader()
-            );
-            RegisteredServiceProvider<?> registration = getRegistration(apiClass);
-            if (registration == null || registration.getProvider() == null) return true;
-            Object service = registration.getProvider();
-            provider = service;
-            findLogicalName = service.getClass().getMethod("findLogicalName", World.class);
-            findWorld = service.getClass().getMethod("find", String.class);
-            loadWorld = service.getClass().getMethod("load", String.class);
-            return false;
-        } catch (ReflectiveOperationException | RuntimeException exception) {
-            lookupFailed = true;
-            logLookupFailure(exception);
-            return true;
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private RegisteredServiceProvider<?> getRegistration(Class<?> apiClass) {
-        return plugin.getServer().getServicesManager().getRegistration((Class<Object>) apiClass);
-    }
-
-    private void logLookupFailure(Throwable exception) {
-        if (failureLogged) return;
-        failureLogged = true;
-        plugin.getLogger().log(
-                Level.WARNING,
-                "DreamWorld is enabled but its public world API could not be used.",
-                exception
-        );
+        return lookup.resolveWorld(logicalName);
     }
 }

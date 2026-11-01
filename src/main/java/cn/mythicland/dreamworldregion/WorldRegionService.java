@@ -1,18 +1,19 @@
 package cn.mythicland.dreamworldregion;
 
 import cn.mythicland.dreamlib.api.DreamLibApi;
-import cn.mythicland.dreamlib.bootstrap.annotation.ServiceComponent;
+import cn.mythicland.dreamworldregion.api.DreamWorldRegionApi;
 import cn.mythicland.dreamworldregion.api.LandmarkDefinition;
 import cn.mythicland.dreamworldregion.api.RegionDefinition;
-import cn.mythicland.dreamworldregion.api.DreamWorldRegionApi;
-import org.bukkit.Location;
-import org.bukkit.World;
-import org.bukkit.entity.Player;
+import cn.mythicland.framework.bukkit.component.ServiceComponent;
 
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+
+import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.entity.Player;
 
 /**
  * Implements the public WorldRegion service contract.

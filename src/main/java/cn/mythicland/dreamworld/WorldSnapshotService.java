@@ -1,7 +1,8 @@
 package cn.mythicland.dreamworld;
 
-import cn.mythicland.dreamlib.path.FileTreeOperations;
-import cn.mythicland.dreamlib.path.SafePathResolver;
+import cn.mythicland.framework.path.FileTreeOperations;
+import cn.mythicland.framework.path.SafePathResolver;
+import cn.mythicland.framework.bukkit.world.v1_12_R1.LegacyRegionSnapshots;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -18,10 +19,16 @@ final class WorldSnapshotService {
 
     private final SafePathResolver snapshotResolver;
     private final SafePathResolver workResolver;
+    private final RegionCopier regionCopier;
 
     WorldSnapshotService(Path snapshotsRoot, Path workRoot) {
+        this(snapshotsRoot, workRoot, LegacyRegionSnapshots::copyWithoutCreatures);
+    }
+
+    WorldSnapshotService(Path snapshotsRoot, Path workRoot, RegionCopier regionCopier) {
         this.snapshotResolver = new SafePathResolver(snapshotsRoot);
         this.workResolver = new SafePathResolver(workRoot);
+        this.regionCopier = regionCopier;
     }
 
     void ensureRootDirectory() throws IOException {
@@ -137,12 +144,17 @@ final class WorldSnapshotService {
                     throw new IOException("World region file escapes the snapshot directory: " + file);
                 }
                 Files.createDirectories(target.getParent());
-                Files.copy(file, target, StandardCopyOption.REPLACE_EXISTING);
+                regionCopier.copy(file, target);
                 copiedEntries.incrementAndGet();
                 return FileVisitResult.CONTINUE;
             }
         });
         return copiedEntries.get();
+    }
+
+    @FunctionalInterface
+    interface RegionCopier {
+        void copy(Path source, Path target) throws IOException;
     }
 
     private void requireDirectoryOrAbsent(Path directory) throws IOException {

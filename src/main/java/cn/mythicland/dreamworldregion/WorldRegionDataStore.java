@@ -1,6 +1,8 @@
 package cn.mythicland.dreamworldregion;
 
-import cn.mythicland.dreamlib.bootstrap.annotation.InjectComponent;
+import cn.mythicland.framework.bukkit.content.ContentUpdate;
+import cn.mythicland.framework.component.InjectComponent;
+import cn.mythicland.framework.bukkit.content.ContentWorkspace;
 import cn.mythicland.dreamworldregion.api.LandmarkDefinition;
 import cn.mythicland.dreamworldregion.api.RegionBounds;
 import cn.mythicland.dreamworldregion.api.RegionDefinition;
@@ -20,10 +22,11 @@ import java.util.*;
  * Owns YAML persistence for WorldRegion's public definitions.
  */
 @InjectComponent
-final class WorldRegionDataStore {
+public final class WorldRegionDataStore {
 
     private final JavaPlugin plugin;
     private final DreamWorldIntegration worldManager;
+    private final ContentWorkspace content;
     private final Path regionsFile;
     private final Path landmarksFile;
     private Map<String, RegionDefinition> regions;
@@ -35,11 +38,11 @@ final class WorldRegionDataStore {
     ) {
         this.plugin = Objects.requireNonNull(plugin, "plugin");
         this.worldManager = Objects.requireNonNull(worldManager, "worldManager");
-        Path dataDirectory = plugin.getDataFolder().toPath().toAbsolutePath().normalize();
-        this.regionsFile = dataDirectory.resolve("regions.yml").normalize();
-        this.landmarksFile = dataDirectory.resolve("landmarks.yml").normalize();
-        ensureResource("regions.yml", regionsFile);
-        ensureResource("landmarks.yml", landmarksFile);
+        this.content = cn.mythicland.dreamlib.api.DreamLibApi.contentFor(plugin);
+        this.regionsFile = content.resolve("DreamWorld/regions.yml", "regions.yml");
+        this.landmarksFile = content.resolve("DreamWorld/landmarks.yml", "landmarks.yml");
+        if (content.documents("regions.yml").isEmpty()) ensureResource("regions.yml", regionsFile);
+        if (content.documents("landmarks.yml").isEmpty()) ensureResource("landmarks.yml", landmarksFile);
         reload();
     }
 
@@ -150,8 +153,30 @@ final class WorldRegionDataStore {
     }
 
     synchronized void reload() {
-        regions = loadRegions();
-        landmarks = loadLandmarks();
+        var nextRegions = loadRegions();
+        var nextLandmarks = loadLandmarks();
+        regions = nextRegions;
+        landmarks = nextLandmarks;
+    }
+
+    /** Reloads editable definitions without changing system settings. */
+    public synchronized void reloadContent() {
+        reload();
+    }
+
+    /** @return a validated region and landmark update with an inverse */
+    public synchronized ContentUpdate prepareContentReload() {
+        var nextRegions = loadRegions();
+        var nextLandmarks = loadLandmarks();
+        var previousRegions = regions;
+        var previousLandmarks = landmarks;
+        return new ContentUpdate(() -> {
+            regions = nextRegions;
+            landmarks = nextLandmarks;
+        }, () -> {
+            regions = previousRegions;
+            landmarks = previousLandmarks;
+        });
     }
 
     synchronized Collection<RegionDefinition> regions() {
@@ -236,7 +261,10 @@ final class WorldRegionDataStore {
     }
 
     private Map<String, RegionDefinition> loadRegions() {
-        YamlConfiguration configuration = loadFile(regionsFile);
+        return parseRegions(loadFile(regionsFile));
+    }
+
+    private static Map<String, RegionDefinition> parseRegions(YamlConfiguration configuration) {
         ConfigurationSection section = requireRootSection(configuration, "regions.yml", "regions");
 
         Map<String, RegionDefinition> loaded = new LinkedHashMap<>();
@@ -264,7 +292,10 @@ final class WorldRegionDataStore {
     }
 
     private Map<String, LandmarkDefinition> loadLandmarks() {
-        YamlConfiguration configuration = loadFile(landmarksFile);
+        return parseLandmarks(loadFile(landmarksFile));
+    }
+
+    private static Map<String, LandmarkDefinition> parseLandmarks(YamlConfiguration configuration) {
         ConfigurationSection section = requireRootSection(configuration, "landmarks.yml", "landmarks");
 
         Map<String, LandmarkDefinition> loaded = new LinkedHashMap<>();
@@ -285,6 +316,12 @@ final class WorldRegionDataStore {
             }
         }
         return immutableMap(loaded);
+    }
+
+    /** Validates active package-owned region bounds and landmark coordinates without applying changes. */
+    public static void validateContent(ContentWorkspace content) {
+        parseRegions(content.document("regions.yml").yaml());
+        parseLandmarks(content.document("landmarks.yml").yaml());
     }
 
     private void saveRegions(Map<String, RegionDefinition> definitions) {
@@ -322,17 +359,13 @@ final class WorldRegionDataStore {
     }
 
     private YamlConfiguration loadFile(Path file) {
-        validateFile(file);
-        return YamlConfiguration.loadConfiguration(file.toFile());
+        return content.document(file.getFileName().toString()).yaml();
     }
 
     private void saveFile(Path file, YamlConfiguration configuration) {
-        validateFile(file);
-        try {
-            configuration.save(file.toFile());
-        } catch (IOException exception) {
-            throw new IllegalStateException("Could not save DreamWorld region data file: " + file, exception);
-        }
+        var document = content.document(file.getFileName().toString());
+        for (String key : configuration.getKeys(false)) document.yaml().set(key, configuration.get(key));
+        document.save();
     }
 
     private void ensureResource(String resourceName, Path target) {
@@ -345,7 +378,7 @@ final class WorldRegionDataStore {
         } catch (IOException exception) {
             throw new IllegalStateException("Could not create DreamWorld region data directory", exception);
         }
-        plugin.saveResource(resourceName, false);
+        cn.mythicland.dreamlib.api.DreamLibApi.contentFor(plugin).resource(plugin, resourceName, resourceName);
         validateFile(target);
     }
 }

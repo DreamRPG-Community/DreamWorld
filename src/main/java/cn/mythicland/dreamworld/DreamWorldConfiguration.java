@@ -1,9 +1,9 @@
 package cn.mythicland.dreamworld;
 
-import cn.mythicland.dreamlib.bootstrap.annotation.ConfigComponent;
-import cn.mythicland.dreamlib.config.ConfigValue;
-import cn.mythicland.dreamlib.config.ConfigView;
-import cn.mythicland.dreamlib.config.ConfigurableComponent;
+import cn.mythicland.framework.bukkit.config.ConfigView;
+import cn.mythicland.framework.bukkit.config.ConfigurableComponent;
+import cn.mythicland.framework.bukkit.config.annotation.ConfigComponent;
+import cn.mythicland.framework.bukkit.config.annotation.ConfigProperty;
 
 import java.util.Objects;
 
@@ -34,29 +34,29 @@ final class DreamWorldConfiguration implements ConfigurableComponent {
     }
 
     record RawSettings(
-            @ConfigValue(
+            @ConfigProperty(
                     path = "world-directory",
                     defaultValue = "worlds",
                     nonBlank = true
             )
             String worldDirectory,
-            @ConfigValue(
+            @ConfigProperty(
                     path = "initial-world-name",
                     defaultValue = "world",
                     nonBlank = true
             )
             String initialWorldName,
-            @ConfigValue(
+            @ConfigProperty(
                     path = "clean-world-resources",
                     defaultValue = "false"
             )
             boolean cleanWorldResources,
-            @ConfigValue(
+            @ConfigProperty(
                     path = "auto-reset-worlds",
                     defaultValue = "false"
             )
             boolean autoResetWorlds,
-            @ConfigValue(
+            @ConfigProperty(
                     path = "fallback-world",
                     defaultValue = "world",
                     nonBlank = true

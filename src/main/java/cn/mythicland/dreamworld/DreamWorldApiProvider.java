@@ -1,17 +1,18 @@
 package cn.mythicland.dreamworld;
 
-import cn.mythicland.dreamlib.bootstrap.annotation.ServiceComponent;
-import cn.mythicland.dreamworld.api.WorldInfo;
 import cn.mythicland.dreamworld.api.DreamWorldApi;
+import cn.mythicland.dreamworld.api.WorldInfo;
 import cn.mythicland.dreamworld.api.WorldSpawn;
-import org.bukkit.Location;
-import org.bukkit.World;
-import org.bukkit.entity.Player;
+import cn.mythicland.framework.bukkit.component.ServiceComponent;
 
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+
+import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.entity.Player;
 
 /**
  * Publishes the active DreamWorld lifecycle service through Lib's service annotation.

@@ -1,20 +1,18 @@
 package cn.mythicland.dreamworldprotect.bootstrap;
 
-import cn.mythicland.dreamlib.bootstrap.DreamLibPluginLifecycle;
-import cn.mythicland.dreamlib.bootstrap.annotation.LifecycleComponent;
-import cn.mythicland.dreamlib.bootstrap.annotation.ServiceComponent;
 import cn.mythicland.dreamworld.DreamWorldPlugin;
+import cn.mythicland.dreamworld.api.DreamWorldLookup;
 import cn.mythicland.dreamworldprotect.api.DreamWorldProtectionApi;
 import cn.mythicland.dreamworldprotect.api.WorldProtectionPolicy;
 import cn.mythicland.dreamworldprotect.config.WorldProtectConfiguration;
 import cn.mythicland.dreamworldprotect.config.WorldProtectSettings;
-import cn.mythicland.dreamworldprotect.integration.dreamworld.DreamWorldIntegration;
 import cn.mythicland.dreamworldprotect.listener.WorldProtectListener;
 import cn.mythicland.dreamworldprotect.service.EditModeTracker;
 import cn.mythicland.dreamworldprotect.storage.WorldConfigFileResolver;
 import cn.mythicland.dreamworldprotect.storage.WorldConfigStore;
-import org.bukkit.Bukkit;
-import org.bukkit.World;
+import cn.mythicland.framework.bukkit.component.ServiceComponent;
+import cn.mythicland.framework.component.LifecycleComponent;
+import cn.mythicland.framework.component.ManagedLifecycle;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -23,12 +21,15 @@ import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.bukkit.Bukkit;
+import org.bukkit.World;
+
 /**
  * Owns WorldProtect construction, listener and command registration, service lifecycle, and reload.
  */
 @LifecycleComponent
 @ServiceComponent(DreamWorldProtectionApi.class)
-public final class WorldProtectLifecycle implements DreamLibPluginLifecycle, DreamWorldProtectionApi {
+public final class WorldProtectLifecycle implements ManagedLifecycle, DreamWorldProtectionApi {
 
     private static final String DEFAULT_WORLD_CONFIG_DIRECTORY = "worlds";
 
@@ -36,7 +37,7 @@ public final class WorldProtectLifecycle implements DreamLibPluginLifecycle, Dre
     private final WorldProtectConfiguration configuration;
     private WorldConfigStore worldConfigs;
     private EditModeTracker editModes;
-    private DreamWorldIntegration worldManager;
+    private DreamWorldLookup worldManager;
     private WorldProtectSettings settings;
 
     /**
@@ -56,7 +57,7 @@ public final class WorldProtectLifecycle implements DreamLibPluginLifecycle, Dre
      * Loads world policies, registers the listener, commands, and public API.
      */
     @Override
-    public void enable() {
+    public void load() {
         ConfigurationState current = loadConfiguration();
         settings = current.settings();
         worldConfigs = new WorldConfigStore(
@@ -65,7 +66,7 @@ public final class WorldProtectLifecycle implements DreamLibPluginLifecycle, Dre
                 current.fileResolver()
         );
         editModes = new EditModeTracker();
-        worldManager = new DreamWorldIntegration(plugin);
+        worldManager = new DreamWorldLookup(plugin);
         plugin.getServer().getPluginManager().registerEvents(
                 new WorldProtectListener(worldConfigs, editModes, worldManager),
                 plugin
@@ -90,7 +91,7 @@ public final class WorldProtectLifecycle implements DreamLibPluginLifecycle, Dre
      * Unregisters the public API and clears in-memory world state.
      */
     @Override
-    public void disable() {
+    public void unload() {
         if (editModes != null) editModes.clear();
         if (worldConfigs != null) worldConfigs.clear();
         settings = null;
@@ -146,7 +147,7 @@ public final class WorldProtectLifecycle implements DreamLibPluginLifecycle, Dre
      *
      * @return DreamWorld integration
      */
-    public DreamWorldIntegration worldManager() {
+    public DreamWorldLookup worldManager() {
         return Objects.requireNonNull(worldManager, "DreamWorld integration is unavailable");
     }
 

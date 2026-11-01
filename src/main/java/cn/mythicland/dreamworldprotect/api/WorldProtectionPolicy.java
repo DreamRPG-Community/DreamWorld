@@ -1,6 +1,6 @@
 package cn.mythicland.dreamworldprotect.api;
 
-import cn.mythicland.dreamlib.policy.ListPolicy;
+import cn.mythicland.framework.policy.ListPolicy;
 
 import java.util.Set;
 

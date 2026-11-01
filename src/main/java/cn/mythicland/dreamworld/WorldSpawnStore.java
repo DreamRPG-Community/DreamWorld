@@ -1,8 +1,10 @@
 package cn.mythicland.dreamworld;
 
-import cn.mythicland.dreamlib.bootstrap.annotation.InjectComponent;
-import cn.mythicland.dreamlib.path.SafePathResolver;
-import cn.mythicland.dreamlib.storage.AtomicYamlStore;
+import cn.mythicland.framework.bukkit.content.ContentUpdate;
+import cn.mythicland.framework.component.InjectComponent;
+import cn.mythicland.framework.bukkit.content.ContentWorkspace;
+import cn.mythicland.framework.path.SafePathResolver;
+import cn.mythicland.framework.bukkit.storage.AtomicYamlStore;
 import cn.mythicland.dreamworld.api.WorldSpawn;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -39,10 +41,7 @@ public final class WorldSpawnStore {
         this.plugin = Objects.requireNonNull(plugin, "plugin");
         Path dataDirectory = plugin.getDataFolder().toPath().toAbsolutePath().normalize();
         this.nameResolver = new SafePathResolver(dataDirectory);
-        this.target = dataDirectory.resolve(RESOURCE_NAME).normalize();
-        if (!target.startsWith(dataDirectory)) {
-            throw new IllegalStateException("DreamWorld spawn path escaped the plugin directory");
-        }
+        this.target = cn.mythicland.dreamlib.api.DreamLibApi.contentFor(plugin).resolve("DreamWorld/" + RESOURCE_NAME, RESOURCE_NAME);
     }
 
     /**
@@ -91,6 +90,22 @@ public final class WorldSpawnStore {
             }
         }
         spawns = Map.copyOf(loaded);
+    }
+
+    /** @return a validated spawn update without rewriting coordinates or system settings */
+    public synchronized ContentUpdate prepareContentReload() {
+        var yaml = ContentWorkspace.readYaml(target);
+        var section = yaml.getConfigurationSection("spawns");
+        if (section == null) throw new IllegalArgumentException("Missing spawns section in " + target);
+        Map<String, WorldSpawn> next = new LinkedHashMap<>();
+        for (String id : section.getKeys(false)) {
+            String path = "spawns." + id;
+            next.put(id, new WorldSpawn(nameResolver.normalizeSingleSegment(id),
+                    requiredDouble(yaml, path + ".x"), requiredDouble(yaml, path + ".y"), requiredDouble(yaml, path + ".z"),
+                    requiredFloat(yaml, path + ".yaw"), requiredFloat(yaml, path + ".pitch")));
+        }
+        var previous = spawns;
+        return new ContentUpdate(() -> spawns = Map.copyOf(next), () -> spawns = previous);
     }
 
     /**
@@ -190,7 +205,7 @@ public final class WorldSpawnStore {
             throw new IllegalStateException("Could not create DreamWorld data directory", exception);
         }
         if (!Files.exists(target, LinkOption.NOFOLLOW_LINKS) && !Files.isSymbolicLink(target)) {
-            plugin.saveResource(RESOURCE_NAME, false);
+            cn.mythicland.dreamlib.api.DreamLibApi.contentFor(plugin).resource(plugin, RESOURCE_NAME, RESOURCE_NAME);
         }
         if (Files.isSymbolicLink(target) || !Files.isRegularFile(target, LinkOption.NOFOLLOW_LINKS)) {
             throw new IllegalStateException("DreamWorld spawn file is not a regular file: " + target);

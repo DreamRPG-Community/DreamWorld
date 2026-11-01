@@ -1,8 +1,7 @@
 package cn.mythicland.dreamworldregion.api;
 
-import cn.mythicland.dreamlib.location.LocationSnapper;
-
-import java.util.Objects;
+import cn.mythicland.framework.validation.TextValidation;
+import cn.mythicland.framework.bukkit.location.LocationSnapper;
 
 /**
  * Immutable public definition of one named teleport landmark.
@@ -32,8 +31,8 @@ public record LandmarkDefinition(
      */
     public LandmarkDefinition {
         id = requireIdentifier(id);
-        displayName = requireText(displayName, "displayName");
-        worldName = requireText(worldName, "worldName");
+        displayName = TextValidation.requireText(displayName, "displayName");
+        worldName = TextValidation.requireText(worldName, "worldName");
         if (!Double.isFinite(x) || !Double.isFinite(y) || !Double.isFinite(z)) {
             throw new IllegalArgumentException("Landmark coordinates must be finite");
         }
@@ -48,16 +47,11 @@ public record LandmarkDefinition(
     }
 
     private static String requireIdentifier(String value) {
-        String identifier = requireText(value, "id");
+        String identifier = TextValidation.requireText(value, "id");
         if (!identifier.matches("[A-Za-z0-9_-]+")) {
             throw new IllegalArgumentException("id contains unsupported characters: " + identifier);
         }
         return identifier;
     }
 
-    private static String requireText(String value, String fieldName) {
-        String text = Objects.requireNonNull(value, fieldName).trim();
-        if (text.isBlank()) throw new IllegalArgumentException(fieldName + " cannot be blank");
-        return text;
-    }
 }

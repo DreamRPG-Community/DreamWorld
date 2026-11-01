@@ -1,6 +1,6 @@
 package cn.mythicland.dreamworldprotect.storage;
 
-import cn.mythicland.dreamlib.path.SafePathResolver;
+import cn.mythicland.framework.path.SafePathResolver;
 import org.bukkit.World;
 
 import java.io.IOException;

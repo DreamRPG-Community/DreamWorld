@@ -1,8 +1,9 @@
 package cn.mythicland.dreamworld;
 
+import cn.mythicland.framework.bukkit.MainThread;
 import cn.mythicland.dreamlib.api.DreamLibApi;
-import cn.mythicland.dreamlib.location.LocationSnapper;
-import cn.mythicland.dreamlib.path.SafePathResolver;
+import cn.mythicland.framework.bukkit.location.LocationSnapper;
+import cn.mythicland.framework.path.SafePathResolver;
 import cn.mythicland.dreamworld.api.WorldInfo;
 import cn.mythicland.dreamworld.api.DreamWorldApi;
 import cn.mythicland.dreamworld.api.WorldSpawn;
@@ -184,7 +185,7 @@ public final class DreamWorldService implements DreamWorldApi {
             if (location.getWorld() == null || !world.equals(location.getWorld())) {
                 throw new IllegalArgumentException("Spawn location must be inside world: " + normalizedName);
             }
-            Location snapped = LocationSnapper.snapBlockAndView(location);
+            Location snapped = LocationSnapper.snapBlockAndHorizontalView(location);
             return new WorldSpawn(
                     normalizedName,
                     snapped.getX(),
@@ -480,9 +481,7 @@ public final class DreamWorldService implements DreamWorldApi {
     }
 
     private World createWorld(ManagedWorld managedWorld) {
-        if (!Bukkit.isPrimaryThread()) {
-            throw new IllegalStateException("World creation must run on the primary thread");
-        }
+        MainThread.require("World creation must run on the primary thread");
 
         managedWorld.setStatus(WorldStatus.LOADING);
         World existingWorld = Bukkit.getWorld(managedWorld.bukkitName());
@@ -502,9 +501,7 @@ public final class DreamWorldService implements DreamWorldApi {
     }
 
     private void unloadWorld(ManagedWorld managedWorld, boolean force) {
-        if (!Bukkit.isPrimaryThread()) {
-            throw new IllegalStateException("World unloading must run on the primary thread");
-        }
+        MainThread.require("World unloading must run on the primary thread");
 
         World world = managedWorld.world();
         if (world == null) world = Bukkit.getWorld(managedWorld.bukkitName());

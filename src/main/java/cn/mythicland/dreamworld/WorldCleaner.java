@@ -1,6 +1,6 @@
 package cn.mythicland.dreamworld;
 
-import cn.mythicland.dreamlib.path.FileTreeOperations;
+import cn.mythicland.framework.path.FileTreeOperations;
 
 import java.io.IOException;
 import java.io.Serial;

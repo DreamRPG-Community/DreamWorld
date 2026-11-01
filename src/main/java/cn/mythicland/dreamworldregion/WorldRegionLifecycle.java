@@ -1,18 +1,19 @@
 package cn.mythicland.dreamworldregion;
 
-import cn.mythicland.dreamlib.bootstrap.DreamLibPluginLifecycle;
-import cn.mythicland.dreamlib.bootstrap.PluginTaskScope;
-import cn.mythicland.dreamlib.bootstrap.annotation.LifecycleComponent;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitTask;
+import cn.mythicland.framework.bukkit.task.PluginTaskScope;
+import cn.mythicland.framework.component.LifecycleComponent;
+import cn.mythicland.framework.component.ManagedLifecycle;
 
 import java.util.Objects;
+
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 
 /**
  * Owns WorldRegion's scheduled particle lifecycle and reload boundary.
  */
 @LifecycleComponent
-final class WorldRegionLifecycle implements DreamLibPluginLifecycle {
+final class WorldRegionLifecycle implements ManagedLifecycle {
 
     private final JavaPlugin plugin;
     private final PluginTaskScope tasks;
@@ -39,7 +40,7 @@ final class WorldRegionLifecycle implements DreamLibPluginLifecycle {
     }
 
     @Override
-    public void enable() {
+    public void load() {
         restartParticleTask();
         plugin.getLogger().info("DreamWorld region enabled.");
     }
@@ -52,7 +53,7 @@ final class WorldRegionLifecycle implements DreamLibPluginLifecycle {
     }
 
     @Override
-    public void disable() {
+    public void unload() {
         tasks.cancel(particleTask);
         particleTask = null;
         selections.clearAll();

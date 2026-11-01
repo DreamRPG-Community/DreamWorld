@@ -1,7 +1,7 @@
 package cn.mythicland.dreamworldprotect.policy;
 
-import cn.mythicland.dreamlib.policy.ListMode;
-import cn.mythicland.dreamlib.policy.ListPolicy;
+import cn.mythicland.framework.policy.ListMode;
+import cn.mythicland.framework.policy.ListPolicy;
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;

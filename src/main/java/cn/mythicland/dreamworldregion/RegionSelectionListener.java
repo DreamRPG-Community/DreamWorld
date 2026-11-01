@@ -1,6 +1,10 @@
 package cn.mythicland.dreamworldregion;
 
-import cn.mythicland.dreamlib.bootstrap.annotation.ListenerComponent;
+import cn.mythicland.framework.bukkit.component.ListenerComponent;
+import cn.mythicland.framework.component.InjectComponent;
+
+import java.util.Objects;
+
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -12,11 +16,10 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.Objects;
-
 /**
  * Records administrator region corners from wooden shovel interactions.
  */
+@InjectComponent
 @ListenerComponent
 final class RegionSelectionListener implements Listener {
 

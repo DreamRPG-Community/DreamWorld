@@ -1,6 +1,7 @@
 package cn.mythicland.dreamworldregion;
 
-import cn.mythicland.dreamlib.bootstrap.annotation.InjectComponent;
+import cn.mythicland.framework.bukkit.MainThread;
+import cn.mythicland.framework.component.InjectComponent;
 import cn.mythicland.dreamworldregion.api.RegionBounds;
 import cn.mythicland.dreamworldregion.api.RegionDefinition;
 import org.bukkit.*;
@@ -88,18 +89,14 @@ final class RegionParticleRenderer {
     }
 
     void renderAll() {
-        if (!Bukkit.isPrimaryThread()) {
-            throw new IllegalStateException("Region particles must render on the primary thread");
-        }
+        MainThread.require("Region particles must render on the primary thread");
         WorldRegionSettings.SettingsSnapshot current = settings.snapshot();
         if (!current.particlesEnabled()) return;
         for (Player player : Bukkit.getOnlinePlayers()) renderPlayer(player, current);
     }
 
     void render(Player player) {
-        if (!Bukkit.isPrimaryThread()) {
-            throw new IllegalStateException("Region particles must render on the primary thread");
-        }
+        MainThread.require("Region particles must render on the primary thread");
         renderPlayer(Objects.requireNonNull(player, "player"), settings.snapshot());
     }
 

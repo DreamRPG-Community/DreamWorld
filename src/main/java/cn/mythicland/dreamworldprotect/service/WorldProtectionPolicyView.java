@@ -1,6 +1,6 @@
 package cn.mythicland.dreamworldprotect.service;
 
-import cn.mythicland.dreamlib.policy.ListPolicy;
+import cn.mythicland.framework.policy.ListPolicy;
 import cn.mythicland.dreamworldprotect.api.WorldProtectionPolicy;
 import cn.mythicland.dreamworldprotect.policy.WorldProtectionRules;
 
