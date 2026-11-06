@@ -7,6 +7,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -69,6 +73,57 @@ class WorldSnapshotServiceTest {
         service.restore("main", runtimeWorld);
 
         assertEquals("new-terrain", Files.readString(runtimeWorld.resolve("region").resolve("r.0.0.mca")));
+    }
+
+    @Test
+    void parallelRestoreClearsRuntimeAndWaitsForEveryDimensionWithoutChangingTheSnapshot() throws Exception {
+        Path snapshots = temporaryDirectory.resolve("worlds");
+        Files.createDirectories(snapshots);
+        Files.move(createWorld(), snapshots.resolve("main"));
+        Path runtimeRoot = temporaryDirectory.resolve(".runtime");
+        Path runtimeWorld = runtimeRoot.resolve("main");
+        Files.createDirectories(runtimeWorld);
+        Files.writeString(runtimeWorld.resolve("runtime-only.txt"), "must be reset");
+        WorldSnapshotService service = new WorldSnapshotService(snapshots, runtimeRoot, this::copyRegion);
+        List<Runnable> queued = new ArrayList<>();
+        var prepared = service.prepareRestore("main", runtimeWorld);
+        var completed = prepared.copyAsync(action -> CompletableFuture.runAsync(action, queued::add));
+
+        assertFalse(Files.exists(runtimeWorld.resolve("runtime-only.txt")));
+        assertEquals("level", Files.readString(runtimeWorld.resolve("level.dat")));
+        assertFalse(completed.isDone());
+        assertEquals(3, queued.size());
+        queued.get(2).run();
+        queued.get(1).run();
+        assertFalse(completed.isDone());
+        queued.getFirst().run();
+
+        assertEquals(5, completed.join().copiedEntries());
+        assertEquals("terrain", Files.readString(runtimeWorld.resolve("region/r.0.0.mca")));
+        assertEquals("nether", Files.readString(runtimeWorld.resolve("DIM-1/region/r.0.0.mca")));
+        assertEquals("end", Files.readString(runtimeWorld.resolve("DIM1/region/r.0.0.mca")));
+        assertEquals("terrain", Files.readString(snapshots.resolve("main/region/r.0.0.mca")));
+        assertFalse(Files.exists(runtimeWorld.resolve("playerdata")));
+        assertFalse(Files.exists(runtimeWorld.resolve("data")));
+    }
+
+    @Test
+    void parallelRestoreReportsFailureOnlyAfterAllScheduledRegionWorkFinishes() throws Exception {
+        Path snapshots = temporaryDirectory.resolve("worlds");
+        Files.createDirectories(snapshots);
+        Files.move(createWorld(), snapshots.resolve("main"));
+        WorldSnapshotService service = new WorldSnapshotService(snapshots, temporaryDirectory.resolve(".runtime"),
+                (source, target) -> {
+                    throw new IOException("Unreadable region");
+                });
+        List<Runnable> queued = new ArrayList<>();
+        var completed = service.prepareRestore("main", temporaryDirectory.resolve(".runtime/main"))
+                .copyAsync(action -> CompletableFuture.runAsync(action, queued::add));
+        queued.getFirst().run();
+        assertFalse(completed.isDone());
+        queued.get(1).run();
+        queued.get(2).run();
+        assertInstanceOf(IOException.class, assertThrows(CompletionException.class, completed::join).getCause());
     }
 
     @Test

@@ -8,9 +8,13 @@ import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 final class WorldSnapshotService {
@@ -53,22 +57,37 @@ final class WorldSnapshotService {
     }
 
     SnapshotRestoreResult restore(String logicalName, Path worldDirectory) throws IOException {
+        PreparedRestore prepared = prepareRestore(logicalName, worldDirectory);
+        copyRegions(prepared.mapCopy.regions());
+        return prepared.result();
+    }
+
+    PreparedRestore prepareRestore(String logicalName, Path worldDirectory) throws IOException {
         Path snapshotDirectory = snapshotResolver.resolveSingleSegment(logicalName);
         WorldDirectoryValidator.requireWorldDirectory(snapshotDirectory);
         prepareTargetDirectory(worldDirectory);
 
-        AtomicInteger deletedEntries = new AtomicInteger();
+        int deletedEntries = 0;
         try (Stream<Path> children = Files.list(worldDirectory)) {
             for (Path child : children.toList()) {
-                deletedEntries.addAndGet(FileTreeOperations.deleteRecursively(child));
+                deletedEntries += FileTreeOperations.deleteRecursively(child);
             }
         }
 
-        int copiedEntries = copyMapFiles(snapshotDirectory, worldDirectory);
-        return new SnapshotRestoreResult(deletedEntries.get(), copiedEntries);
+        return new PreparedRestore(deletedEntries, prepareMapCopy(snapshotDirectory, worldDirectory));
     }
 
     private int copyMapFiles(Path sourceDirectory, Path targetDirectory) throws IOException {
+        MapCopy prepared = prepareMapCopy(sourceDirectory, targetDirectory);
+        copyRegions(prepared.regions());
+        return prepared.metadataEntries() + prepared.regions().size();
+    }
+
+    private void copyRegions(List<RegionCopy> regions) throws IOException {
+        for (RegionCopy region : regions) regionCopier.copy(region.source(), region.target());
+    }
+
+    private MapCopy prepareMapCopy(Path sourceDirectory, Path targetDirectory) throws IOException {
         int copiedEntries = 0;
         copyRequiredFile(sourceDirectory.resolve("level.dat"), targetDirectory.resolve("level.dat"));
         copiedEntries++;
@@ -79,6 +98,7 @@ final class WorldSnapshotService {
             copiedEntries++;
         }
 
+        List<RegionCopy> regions = new ArrayList<>();
         for (String dimension : SNAPSHOT_DIMENSIONS) {
             Path sourceDimension = dimension.isEmpty() ? sourceDirectory : sourceDirectory.resolve(dimension);
             Path targetDimension = dimension.isEmpty() ? targetDirectory : targetDirectory.resolve(dimension);
@@ -86,9 +106,9 @@ final class WorldSnapshotService {
             requireDirectoryOrAbsent(targetDimension);
             Path sourceRegion = sourceDimension.resolve("region");
             Path targetRegion = targetDimension.resolve("region");
-            copiedEntries += copyRegionFiles(sourceRegion, targetRegion);
+            regions.addAll(findRegionFiles(sourceRegion, targetRegion));
         }
-        return copiedEntries;
+        return new MapCopy(copiedEntries, List.copyOf(regions));
     }
 
     private void copyRequiredFile(Path source, Path target) throws IOException {
@@ -102,8 +122,8 @@ final class WorldSnapshotService {
         Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
     }
 
-    private int copyRegionFiles(Path sourceRegion, Path targetRegion) throws IOException {
-        if (!Files.exists(sourceRegion, LinkOption.NOFOLLOW_LINKS)) return 0;
+    private List<RegionCopy> findRegionFiles(Path sourceRegion, Path targetRegion) throws IOException {
+        if (!Files.exists(sourceRegion, LinkOption.NOFOLLOW_LINKS)) return List.of();
         if (Files.isSymbolicLink(sourceRegion)) {
             throw new IOException("World region directory cannot be a symbolic link: " + sourceRegion);
         }
@@ -111,7 +131,7 @@ final class WorldSnapshotService {
             throw new IOException("World region path is not a directory: " + sourceRegion);
         }
 
-        AtomicInteger copiedEntries = new AtomicInteger();
+        List<RegionCopy> regions = new ArrayList<>();
         Files.walkFileTree(sourceRegion, new SimpleFileVisitor<>() {
             @Override
             public @Nonnull FileVisitResult preVisitDirectory(
@@ -144,12 +164,49 @@ final class WorldSnapshotService {
                     throw new IOException("World region file escapes the snapshot directory: " + file);
                 }
                 Files.createDirectories(target.getParent());
-                regionCopier.copy(file, target);
-                copiedEntries.incrementAndGet();
+                regions.add(new RegionCopy(file, target));
                 return FileVisitResult.CONTINUE;
             }
         });
-        return copiedEntries.get();
+        return regions;
+    }
+
+    /**
+     * Executes one prepared restore; each region is independent and the source remains read-only.
+     */
+    final class PreparedRestore {
+        private final int deletedEntries;
+        private final MapCopy mapCopy;
+
+        private PreparedRestore(int deletedEntries, MapCopy mapCopy) {
+            this.deletedEntries = deletedEntries;
+            this.mapCopy = mapCopy;
+        }
+
+        CompletableFuture<SnapshotRestoreResult> copyAsync(Function<Runnable, CompletableFuture<Void>> runAsync) {
+            List<CompletableFuture<Void>> pending = new ArrayList<>();
+            for (RegionCopy region : mapCopy.regions()) {
+                pending.add(runAsync.apply(() -> {
+                    try {
+                        regionCopier.copy(region.source(), region.target());
+                    } catch (IOException exception) {
+                        throw new CompletionException(exception);
+                    }
+                }));
+            }
+            return CompletableFuture.allOf(pending.toArray(CompletableFuture[]::new))
+                    .thenApply(ignored -> result());
+        }
+
+        private SnapshotRestoreResult result() {
+            return new SnapshotRestoreResult(deletedEntries, mapCopy.metadataEntries() + mapCopy.regions().size());
+        }
+    }
+
+    private record MapCopy(int metadataEntries, List<RegionCopy> regions) {
+    }
+
+    private record RegionCopy(Path source, Path target) {
     }
 
     @FunctionalInterface

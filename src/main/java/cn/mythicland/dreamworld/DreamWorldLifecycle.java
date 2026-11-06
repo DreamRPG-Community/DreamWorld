@@ -2,6 +2,7 @@ package cn.mythicland.dreamworld;
 
 import cn.mythicland.dreamlib.api.DreamLibApi;
 import cn.mythicland.dreamworld.api.DreamWorldApi;
+import cn.mythicland.framework.bukkit.player.StartupJoinGate;
 import cn.mythicland.framework.bukkit.task.PluginTaskScope;
 import cn.mythicland.framework.component.LifecycleComponent;
 import cn.mythicland.framework.component.ManagedLifecycle;
@@ -25,6 +26,7 @@ public final class DreamWorldLifecycle implements ManagedLifecycle {
     private final WorldSpawnStore spawnStore;
     private DreamWorldService service;
     private BukkitTask startupTask;
+    private StartupJoinGate startupJoinGate;
     private CompletableFuture<Void> reloadFuture = CompletableFuture.completedFuture(null);
 
     /**
@@ -55,6 +57,8 @@ public final class DreamWorldLifecycle implements ManagedLifecycle {
      */
     @Override
     public void load() {
+        CompletableFuture<Void> startup = new CompletableFuture<>();
+        startupJoinGate = new StartupJoinGate(plugin, "§c服务器正在启动中, 请稍后重试", startup);
         DreamWorldSettings settings = configuration.snapshot();
         DreamWorldSettingsLoader.ensureDirectories(settings);
         spawnStore.load();
@@ -70,12 +74,14 @@ public final class DreamWorldLifecycle implements ManagedLifecycle {
 
         startupTask = tasks.runLater(1L, () -> service.discoverAndLoadAll().whenComplete((ignored, error) -> {
             if (error != null) {
+                startup.completeExceptionally(error);
                 plugin.getLogger().warning(
                         "Startup world loading finished with failures: " + DreamLibApi.rootCauseMessage(error)
                 );
                 return;
             }
             plugin.getLogger().info("Startup world discovery and loading completed.");
+            startup.complete(null);
         }));
     }
 
@@ -118,6 +124,8 @@ public final class DreamWorldLifecycle implements ManagedLifecycle {
      */
     @Override
     public void unload() {
+        if (startupJoinGate != null) startupJoinGate.close();
+        startupJoinGate = null;
         tasks.cancel(startupTask);
         startupTask = null;
         if (service == null) return;

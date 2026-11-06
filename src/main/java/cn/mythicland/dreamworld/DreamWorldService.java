@@ -251,7 +251,7 @@ public final class DreamWorldService implements DreamWorldApi {
                             ));
                         }
 
-                        return lib.runAsync(() -> prepareWorld(managedWorld))
+                        return prepareWorld(managedWorld)
                                 .thenCompose(ignored -> {
                                     managedWorld.setStatus(WorldStatus.QUEUED);
                                     return lib.supplyOnMain(() -> createWorld(managedWorld));
@@ -446,8 +446,21 @@ public final class DreamWorldService implements DreamWorldApi {
         return names.stream().distinct().sorted().toList();
     }
 
-    private void prepareWorld(ManagedWorld managedWorld) {
+    private CompletableFuture<Void> prepareWorld(ManagedWorld managedWorld) {
+        return lib.supplyAsync(() -> prepareWorldFiles(managedWorld)).thenCompose(prepared -> {
+            if (prepared.isEmpty()) return CompletableFuture.completedFuture(null);
+            return prepared.orElseThrow().copyAsync(action -> lib.runAsync(() -> {
+                if (closed) throw new IllegalStateException("DreamWorld is closed");
+                action.run();
+            })).thenAccept(restored -> plugin.getLogger().info("Prepared " + restored.copiedEntries()
+                    + " map entries from persistent snapshot for world '"
+                    + managedWorld.logicalName() + "'."));
+        });
+    }
+
+    private Optional<WorldSnapshotService.PreparedRestore> prepareWorldFiles(ManagedWorld managedWorld) {
         try {
+            if (closed) throw new IllegalStateException("DreamWorld is closed");
             snapshotResolver.requireRealDirectory(managedWorld.snapshotDirectory());
             Path levelDat = managedWorld.snapshotDirectory().resolve("level.dat");
             if (!Files.isRegularFile(levelDat, LinkOption.NOFOLLOW_LINKS)) {
@@ -462,16 +475,13 @@ public final class DreamWorldService implements DreamWorldApi {
                     LinkOption.NOFOLLOW_LINKS
             );
             if (settings.autoResetWorlds() || !worldReady) {
-                WorldSnapshotService.SnapshotRestoreResult restored = snapshots.restore(
+                return Optional.of(snapshots.prepareRestore(
                         managedWorld.logicalName(),
                         managedWorld.worldDirectory()
-                );
-                plugin.getLogger().info("Prepared " + restored.copiedEntries()
-                        + " map entries from persistent snapshot for world '"
-                        + managedWorld.logicalName() + "'.");
-            } else {
-                runtimeResolver.requireRealDirectory(managedWorld.worldDirectory());
+                ));
             }
+            runtimeResolver.requireRealDirectory(managedWorld.worldDirectory());
+            return Optional.empty();
         } catch (IOException exception) {
             throw new CompletionException(
                     "World preparation failed for '" + managedWorld.logicalName() + "'",
